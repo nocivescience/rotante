@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    body {
+        position: relative;
+        background-color: black;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+        color: white;
+        font-family: 'Courier New', Courier, monospace;
+    }
+
+    .container{
+        perspective: 600px;
+    }
+    .joystick {
+        width: 100px;
+        height: 100px;
+        background-color: #ff0000;
+        border-radius: 50%;
+        position: relative;
+        left: 40%;
+        margin-top: 60px;
+        box-shadow: 1px 1px 10px #ff0000;
+    }
+
+    .head-joystick {
+        width: 50px;
+        height: 50px;
+        background-color: #000000;
+        border-radius: 50%;
+        position: absolute;
+        box-shadow: 1px 1px 10px #ffffff;
+        margin: 25px;
+    }
+
+    .ball-container {
+        display: flex;
+        width: 500px;
+        height: 400px;
+        border-radius: 5px;
+        box-shadow: 1px 1px 10px #00d9ff;
+        perspective: 600px;
+        position: relative;
+    }
+    .ball{
+        background-color: #ff0000;
+        border-radius: 50%;
+        position: absolute;
+        box-shadow: 1px 1px 10px #ffffff;
+        margin: 5px;
+        position: absolute;
+    }
+</style>
+
+<body>
+    <div id="container" class="container">
+        <div class="ball-container" id="ball-container"></div>
+        <div id="joystick" class="joystick">
+            <div id="head-joystick" class="head-joystick"></div>
+        </div>
+        <main id="note" class="note"></main>
+    </div>
+    <script>
+        let mouseStartX, mouseStartY;
+        let gasmeInProgress = false;
+        let balls = [];
+        balls = [
+            {column: 1, row: 1}
+        ].map(ball=>({
+            x: ball.column,
+            y: ball.row,
+            velocityX: 5,
+            velocityY: 2,
+        }))
+        const joystickEl = document.getElementById('joystick');
+        const headJoystickEl = document.getElementById('head-joystick');
+        const ballContainerEl = document.getElementById('ball-container');
+        const noteEl = document.getElementById('note');
+        const containerEl = document.getElementById('container');
+        function minmax(value, limit) {
+            if (value > limit) {
+                return limit;
+            }
+            if (value < -limit) {
+                return -limit;
+            }
+            return value;
+        }
+        function moveBall(i){
+            ballContainerEl.innerHTML = '';
+            const ball = balls[i];
+            const ballEl = document.createElement('div');
+            ballEl.classList.add('ball');
+            ballEl.style.cssText = `
+                left: ${ball.x}px;
+                top: ${ball.y}px;
+                width: 70px;
+                height: 70px;
+            `;
+            ball.x += ball.velocityX;
+            ball.y += ball.velocityY;
+            if (ball.x > 500-70) {
+                ball.velocityX = -ball.velocityX;
+            }else if(ball.x < 0){
+                ball.velocityX = -ball.velocityX;
+            }
+            if (ball.y > 400-70) {
+                ball.velocityY = -ball.velocityY;
+            }else if(ball.y < 0){
+                ball.velocityY = -ball.velocityY;
+            }
+            ballContainerEl.appendChild(ballEl);
+        }
+        setInterval(() => {
+            moveBall(0);
+        }, 10);
+        headJoystickEl.addEventListener('mousedown', (e) => {
+            if (!gasmeInProgress) {
+                mouseStartX = e.clientX;
+                mouseStartY = e.clientY;
+                joystickEl.style.cssText = `
+                animation: none;    
+                cursor: grabbing
+            `;
+                gasmeInProgress = true;
+            }
+        })
+        window.addEventListener('mousemove', (e) => {
+            if (gasmeInProgress) {
+                const mouseDeltaX = minmax(e.clientX - mouseStartX, 50);
+                const mouseDeltaY = minmax(e.clientY - mouseStartY, 50);
+                headJoystickEl.style.cssText = `
+                left: ${mouseDeltaX}px;
+                top: ${mouseDeltaY}px;
+                animation: none;    
+                cursor: grabbing
+                `;
+                ballContainerEl.style.cssText = `
+                transform: rotateX(${-mouseDeltaY}deg) rotateY(${mouseDeltaX}deg);
+                `;
+            }
+        });
+        window.addEventListener('mouseup', (e) => {
+            if (gasmeInProgress) {
+                gasmeInProgress = false;
+                headJoystickEl.style.cssText = `
+                left: 0px;
+                top: 0px;
+                animation: none;    
+                cursor: grab
+                `;
+                ballContainerEl.style.cssText = `
+                transform: rotateX(0deg) rotateY(0deg);
+                `;
+            }
+        })
+    </script>
+</body>
+
+</html>
